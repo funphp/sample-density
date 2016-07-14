@@ -8,7 +8,8 @@
         "php": ">=5.5.9",
         "laravel/framework": "5.1.*",
         "laravel/socialite": "^2.0",
-        "thujohn/twitter": "^2.2"
+        "thujohn/twitter": "^2.2",
+        "soapbox/laravel-formatter": "^2.0"
 
     },
     "require-dev": {
