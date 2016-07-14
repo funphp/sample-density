@@ -21,3 +21,5 @@ Route::get('auth/twitter/callback', 'Auth\AuthController@handleProviderCallback'
 Route::get('home', array('as' => 'home', 'uses' => function(){
   return view('home');
 }));
+
+Route::resource('density', 'DensityController');
