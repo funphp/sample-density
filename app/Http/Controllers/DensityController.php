@@ -9,6 +9,7 @@ use SoapBox\Formatter\Formatter;
 use GuzzleHttp\Client;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+use App\Helpers\Helper;
 
 class DensityController extends Controller
 {
@@ -27,25 +28,18 @@ class DensityController extends Controller
            $tweets = Twitter::getUserTimeline([
                'screen_name' => $handle,
                'count' => $count,
-               'format'      => $type
+               'format'      => 'json'
            ]);
-
-           if($type == 'xml') {
-
-               $formatter = Formatter::make($tweets, Formatter::ARR);
-               return response($formatter->toXml(), 200)
-                   ->header('Content-Type', 'text/xml');
-           }
-           $data = json_decode($tweets, true);
-
-          // try with third patry service to get tweets states
-          // $client = new Client();
-           //$res = $client->request('GET','http://api.twittercounter.com/?apikey=df00481c292e3b97d5b4c5393a3144c4&username='.$handle.'&output=JSONP&count=7');
-           //$response = $request->send();
-           //$data = $response->json();
-          // echo $res->getStatusCode();
-          // echo $res->getHeader('content-type');
-           //$data = json_decode($res->getBody());
+            $tweet_count = Helper::parseTweet(json_decode($tweets));
+            if($type == 'xml') {
+                $xml = Helper::formatResponsexml($tweet_count);
+                return response($xml, 200)
+                    ->header('Content-Type', 'text/xml');
+            } else if($type == 'json') {
+                $res['data'] = $tweet_count;
+            } else {
+                return view('chart', ['tweet_count' => $tweet_count, 'handle'=>$handle]);
+            }
 
         }
         catch (Exception $e)
@@ -53,7 +47,7 @@ class DensityController extends Controller
            dd($e->getMessage());
         }
 
-        return response()->json(['data' => $data], 200);
+        return response()->json(['tweetdensity' => $res], 200);
 
     }
 
