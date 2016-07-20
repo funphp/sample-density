@@ -4,15 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
-use Twitter;
 use SoapBox\Formatter\Formatter;
 use GuzzleHttp\Client;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-use App\Helpers\Helper;
+use App\Repositories\Density\DensityInterface as DensityInterface;
 
 class DensityController extends Controller
 {
+
+    public function __construct(DensityInterface $density)
+    {
+        $this->density = $density;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -23,34 +28,21 @@ class DensityController extends Controller
         $handle = Input::get('handle');
         $count = Input::get('count');
         $type = Input::get('type');
-        try
-        {
-           $tweets = Twitter::getUserTimeline([
-               'screen_name' => $handle,
-               'count' => $count,
-               'format'      => 'json'
-           ]);
-            $tweet_count = Helper::parseTweet(json_decode($tweets));
-            if($type == 'xml') {
-                $xml = Helper::formatResponsexml($tweet_count);
-                return response($xml, 200)
-                    ->header('Content-Type', 'text/xml');
-            } else if($type == 'json') {
-                $res['data'] = $tweet_count;
+        try {
+            $this->density->getTweets($handle, $count);
+            $tweet_count = $this->density->calculate();
+            if ($type == 'xml') {
+                $data = $this->density->xml();
+            } elseif ($type == 'json') {
+                $data = $this->density->json();
             } else {
-                return view('chart', ['tweet_count' => $tweet_count, 'handle'=>$handle]);
+                return view('chart', ['tweet_count' => $tweet_count, 'handle' => $handle]);
             }
-
+            return response($data['data'], 200)->header('Content-Type', $data['contenType']);
+        } catch (Exception $e) {
+            dd($e->getMessage());
         }
-        catch (Exception $e)
-        {
-           dd($e->getMessage());
-        }
-
-        return response()->json(['tweetdensity' => $res], 200);
-
     }
-
     /**
      * Show the form for creating a new resource.
      *
@@ -64,7 +56,7 @@ class DensityController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Request  $request
+     * @param  Request $request
      * @return Response
      */
     public function store(Request $request)
@@ -75,7 +67,7 @@ class DensityController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return Response
      */
     public function show($id)
@@ -86,7 +78,7 @@ class DensityController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return Response
      */
     public function edit($id)
@@ -97,8 +89,8 @@ class DensityController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  Request  $request
-     * @param  int  $id
+     * @param  Request $request
+     * @param  int $id
      * @return Response
      */
     public function update(Request $request, $id)
@@ -109,7 +101,7 @@ class DensityController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return Response
      */
     public function destroy($id)

@@ -146,6 +146,7 @@ return [
         App\Providers\AppServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Repositories\Density\DensityServiceProvide::class
 
     ],
 
@@ -196,7 +197,6 @@ return [
         'View'      => Illuminate\Support\Facades\View::class,
         'Socialite' => Laravel\Socialite\Facades\Socialite::class,
         'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
-        'Helper' => App\Helpers\Helper::class,
         'HTML'		=> Illuminate\Html\HtmlFacade::class
 
 
